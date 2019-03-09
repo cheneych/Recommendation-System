@@ -80,8 +80,9 @@ def Decompress( file_name):
 
 def classification (fp):
 
-    csvFile = open("Update1.csv","a") # a =  zhui jia 
-    writer = csv.writer(csvFile)
+    #csvFile = open("Update2.csv","a") # a =  zhui jia 
+    #writer = csv.writer(csvFile)
+    list1 =[]
     #article
     reg = r"<PubmedArticle>(.+?)</PubmedArticle>"
     #pmid
@@ -94,8 +95,9 @@ def classification (fp):
     reg3 = r"<Title>(.+?)</Title>"
     #Author
     #just has last name
-    reg4 = r"<LastName>(.+?)</LastName>"
-    reg5 = r"<Initials>(.+?)</Initials>"
+    #reg4 = r"<LastName>(.+?)</LastName>"
+    #reg5 = r"<Initials>(.+?)</Initials>"
+    wordreg = re.compile(reg, flags=re.DOTALL)
     wordreg0 = re.compile(reg0)
     wordreg1 = re.compile(reg1)
     wordreg2 = re.compile(reg2)
@@ -103,32 +105,38 @@ def classification (fp):
     #wordreg4 = re.compile(reg4)
     #wordreg5 = re.compile(reg5)
 
-
-    list0 = re.findall(wordreg0, fp)
-    list1 = re.findall(wordreg1, fp)
-    list2 = re.findall(wordreg2,fp)
-    list3 = re.findall(wordreg3,fp)
+    list10 = re.findall(wordreg, fp)
+    #list0 = re.findall(wordreg0, fp)
+    #list1 = re.findall(wordreg1, fp)
+    #list2 = re.findall(wordreg2,fp)
+    #list3 = re.findall(wordreg3,fp)
     #list4 = re.findall(wordreg4,fp) 
     #list5 = re.findall(wordreg5, fp)
 
     #if list0 != [] and list1 != [] and list2 != [] and list3 != []:
     #    writer.writerows([list0, list1, list2, list3])
     
-    for i in range(len(list0)):
+    for i in range(len(list10)):
         try:
-            #writer.writerow([list0[i], list1[i], list2[i], list3[i]])
+            PMID = re.findall(wordreg0, list10[i])[0]
+            Abstract = re.findall(wordreg1, list10[i])[0]
+            Title = re.findall(wordreg2,list10[i])[0]
+            Journal = re.findall(wordreg3,list10[i])[0]
+            list1.append(Journal)
+            #writer.writerow([list0[i], list1[i], list2[i], list3[i]])           
             with open("journal_abbr.txt", 'r') as foo:
                 line = foo.readlines()
-                if list3[i]+'\n' in line:
-                    post_1 = posts.find_one_and_update({'ID': list0[i]}, {'$set': {'Abstract': list1[i]}})
-                    post_2 = posts.find_one_and_update({'ID': list0[i]}, {'$set': {'Abstract': list2[i]}})
-                    post_3 = posts.find_one_and_update({'ID': list0[i]}, {'$set': {'Abstract': list3[i]}})
+                if Journal+'\n' in line:
+                    post_1 = posts.find_one_and_update({'ID': PMID}, {'$set': {'Abstract': Abstract}})
+                    post_2 = posts.find_one_and_update({'ID': PMID}, {'$set': {'Title': Title}})
+                    post_3 = posts.find_one_and_update({'ID': PMID}, {'$set': {'Journal': Journal}})
                     if post_1 == None:
                         print("#INSERT")
-                        post_1 = posts.insert_one({'ID': list0[i] , 'Abstract': list1[i], 'Title': list2[i], 'Journal': list3[i]})
+                        post_1 = posts.insert_one({'ID': PMID , 'Abstract': Abstract, 'Title': Title, 'Journal': Journal})
                         continue
+                        
         except IndexError:
-            break; 
+            continue; 
     
 
 
@@ -138,7 +146,7 @@ def classification (fp):
 
 
 if __name__ == '__main__':
-    count = 1074  # first xml number
+    count = 1080  # first xml number
     connection = pymongo.MongoClient('127.0.0.1',27017)
     db = connection.local
     posts = db.tset  
